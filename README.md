@@ -1,1 +1,47 @@
-# CALCULATOR
+# Calculator Intern Task
+
+<!-- This project is a working calculator built for the internship task. -->
+
+A responsive calculator built with **plain HTML, CSS and JavaScript**.
+
+## Technologies
+
+<!-- No frameworks or libraries are used. -->
+- HTML
+- CSS
+- JavaScript
+
+## Features
+
+<!-- Main calculator features -->
+- Addition
+- Subtraction
+- Multiplication
+- Division
+- Equals button
+- Clear button
+- Keyboard support
+- Responsive mobile layout
+- Division-by-zero protection
+- Complete expressions such as `8+4*2-6/3` before pressing `=`
+- No frameworks
+
+## Run Locally
+
+<!-- Steps for testing the project on a computer. -->
+1. Download or clone the repository.
+2. Open `index.html` in a browser.
+3. The calculator works without installing any dependencies.
+
+## GitHub Pages
+
+<!-- Steps for publishing the calculator online. -->
+1. Create a GitHub repository named `calculator`.
+2. Upload `index.html`, `style.css`, `script.js`, and `README.md`.
+3. Open **Settings → Pages**.
+4. Select **Deploy from a branch**.
+5. Select **main** and **/ (root)**.
+6. Click **Save**.
+
+<!-- The final URL follows this format. -->
+Your website URL will normally be:
