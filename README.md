@@ -33,15 +33,3 @@ A responsive calculator built with **plain HTML, CSS and JavaScript**.
 2. Open `index.html` in a browser.
 3. The calculator works without installing any dependencies.
 
-## GitHub Pages
-
-<!-- Steps for publishing the calculator online. -->
-1. Create a GitHub repository named `calculator`.
-2. Upload `index.html`, `style.css`, `script.js`, and `README.md`.
-3. Open **Settings → Pages**.
-4. Select **Deploy from a branch**.
-5. Select **main** and **/ (root)**.
-6. Click **Save**.
-
-<!-- The final URL follows this format. -->
-Your website URL will normally be:
