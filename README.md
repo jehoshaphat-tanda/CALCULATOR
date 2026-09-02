@@ -22,9 +22,7 @@ A responsive calculator built with **plain HTML, CSS and JavaScript**.
 - Clear button
 - Keyboard support
 - Responsive mobile layout
-- Division-by-zero protection
-- Complete expressions such as `8+4*2-6/3` before pressing `=`
-- No frameworks
+
 
 ## Run Locally
 
