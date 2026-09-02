@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Page character encoding -->
+  <meta charset="UTF-8">
+  <!-- Makes the calculator responsive on mobile devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Page description -->
+  <meta name="description" content="A simple calculator built with plain HTML, CSS and JavaScript.">
+  <!-- Browser tab title -->
+  <title>Calculator</title>
+  <!-- Link to calculator styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Main calculator container -->
+  <main class="calculator" aria-label="Calculator">
+
+    <!-- Number keypad -->
+    <section class="keypad">
+      <!-- First row of numbers -->
+      <button class="key number" data-value="0">0</button>
+      <button class="key number" data-value="3">3</button>
+      <button class="key number" data-value="6">6</button>
+      <button class="key number" data-value="9">9</button>
+
+      <!-- Second row of numbers -->
+      <button class="key number" data-value="1">1</button>
+      <button class="key number" data-value="4">4</button>
+      <button class="key number" data-value="7">7</button>
+
+      <!-- Equals button occupies two rows -->
+      <button class="key equals" data-action="equals">=</button>
+
+      <!-- Third row of numbers -->
+      <button class="key number" data-value="2">2</button>
+      <button class="key number" data-value="5">5</button>
+      <button class="key number" data-value="8">8</button>
+    </section>
+
+    <!-- Calculator display -->
+    <div class="display-wrap">
+      <div id="display" class="display" aria-live="polite">0</div>
+    </div>
+
+    <!-- Mathematical operators -->
+    <section class="operators">
+      <button class="key operator" data-operator="+">+</button>
+      <button class="key operator" data-operator="-">−</button>
+      <button class="key operator" data-operator="/">/</button>
+      <button class="key operator" data-operator="*">×</button>
+    </section>
+
+    <!-- Reset button -->
+    <button class="clear" data-action="clear">CLEAR</button>
+  </main>
+
+  <!-- Load calculator JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>
