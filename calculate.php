@@ -9,11 +9,9 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") { // Check if HTTP method is not POST
     echo json_encode([ // Send JSON-encoded error response
         "success" => false, // Set success status to false
         "error" => "Only POST requests are allowed." // Provide error message string
-    ]); // Close array and json_encode function call
-
+    ]); 
     exit; // Stop execution of the script
-} // Close IF block for non-POST check
-
+} 
 // Get JSON sent by JavaScript // Comment explaining source of raw request body
 $input = file_get_contents("php://input"); // Read raw input stream from request body
 $data = json_decode($input, true); // Decode JSON string into associative PHP array
@@ -26,34 +24,33 @@ if (!is_array($numbers) || !is_array($operators)) { // Ensure both variables are
     echo json_encode([ // Send JSON-encoded error response
         "success" => false, // Set success status to false
         "error" => "Invalid calculation data." // Provide error message string
-    ]); // Close array and json_encode function call
+    ]); 
 
     exit; // Stop execution of the script
-} // Close IF block for array check
+} 
 
 // There must be one more number than operators // Comment explaining binary operator math rule
 if (count($numbers) !== count($operators) + 1) { // Validate count ratio between numbers and operators
     echo json_encode([ // Send JSON-encoded error response
         "success" => false, // Set success status to false
         "error" => "Invalid number/operator arrangement." // Provide error message string
-    ]); // Close array and json_encode function call
+    ]);
 
     exit; // Stop execution of the script
 } // Close IF block for count check
 
-// Validate numbers // Comment explaining numerical values validation loop
+// Validate numbers
 foreach ($numbers as $number) { // Loop through each element in numbers array
     if (!is_numeric($number)) { // Check if value is not numeric
         echo json_encode([ // Send JSON-encoded error response
             "success" => false, // Set success status to false
             "error" => "Invalid number." // Provide error message string
-        ]); // Close array and json_encode function call
-
+        ]); 
         exit; // Stop execution of the script
-    } // Close IF block for numeric check
-} // Close foreach loop for numbers
+    } 
+} 
 
-// Validate operators // Comment explaining whitelist definition
+// Validate operators 
 $allowedOperators = ["+", "-", "*", "/"]; // Define whitelist array of valid operators
 
 foreach ($operators as $operator) { // Loop through each element in operators array
@@ -61,11 +58,11 @@ foreach ($operators as $operator) { // Loop through each element in operators ar
         echo json_encode([ // Send JSON-encoded error response
             "success" => false, // Set success status to false
             "error" => "Invalid operator." // Provide error message string
-        ]); // Close array and json_encode function call
+        ]); 
 
-        exit; // Stop execution of the script
-    } // Close IF block for allowed operators check
-} // Close foreach loop for operators
+        exit; 
+    } 
+} 
 
 // Convert numbers to floating-point values // Comment explaining type casting loop
 for ($i = 0; $i < count($numbers); $i++) { // Iterate through numbers array indices
@@ -73,11 +70,11 @@ for ($i = 0; $i < count($numbers); $i++) { // Iterate through numbers array indi
 } // Close for loop for casting
 
 
-/* // Start multi-line comment block
+/* 
  * First perform multiplication and division. // Explaining mathematical operation sequence
  * This gives multiplication/division higher precedence // Explaining operator precedence (BODMAS/PEMDAS)
  * than addition/subtraction. // Explaining priority over addition/subtraction
- */ // End multi-line comment block
+ */ 
 $i = 0; // Initialize loop index counter to zero
 
 while ($i < count($operators)) { // Loop while index is within operators length
@@ -94,33 +91,33 @@ while ($i < count($operators)) { // Loop while index is within operators length
             echo json_encode([ // Send JSON-encoded error response
                 "success" => false, // Set success status to false
                 "error" => "Cannot divide by zero." // Provide error message string
-            ]); // Close array and json_encode function call
+            ]);
 
             exit; // Stop execution of the script
-        } // Close IF block for zero division check
+        }
 
         if ($operator === "*") { // Check if current operation is multiplication
             $result = $left * $right; // Multiply left and right operands
         } else { // Handle division case
             $result = $left / $right; // Divide left operand by right operand
-        } // Close IF-ELSE block for calculation
+        } 
 
-        // Replace the two numbers with their result // Comment explaining array update strategy
+        // Replace the two numbers with their result 
         $numbers[$i] = $result; // Update current index with computed result
         array_splice($numbers, $i + 1, 1); // Remove processed second operand from array
 
-        // Remove the operator // Comment explaining operator array cleanup
+        // Remove the operator 
         array_splice($operators, $i, 1); // Remove processed operator from array
 
     } else { // Execute when operator is addition or subtraction
         $i++; // Increment index counter to move to next operator
-    } // Close IF-ELSE block for high-precedence check
-} // Close while loop for multiplication/division
+    } 
+} 
 
 
 /* // Start multi-line comment block
  * Now perform addition and subtraction. // Explaining second phase of calculation
- */ // End multi-line comment block
+ */ 
 $result = $numbers[0]; // Initialize final result with first remaining number
 
 for ($i = 0; $i < count($operators); $i++) { // Iterate through remaining addition/subtraction operators
@@ -130,16 +127,16 @@ for ($i = 0; $i < count($operators); $i++) { // Iterate through remaining additi
 
     if ($operator === "+") { // Check if operator is addition
         $result += $nextNumber; // Add next number to running result
-    } // Close IF block for addition
+    } 
 
     if ($operator === "-") { // Check if operator is subtraction
         $result -= $nextNumber; // Subtract next number from running result
-    } // Close IF block for subtraction
-} // Close for loop for addition/subtraction
+    } 
+} 
 
-// Return the result to JavaScript // Comment explaining final output payload
+// Return the result to JavaScript 
 echo json_encode([ // Send JSON-encoded success response
     "success" => true, // Set success status to true
     "result" => $result // Pass calculated value
-]); // Close array and json_encode function call
-?> // Close PHP tag
+]); 
+?> 
