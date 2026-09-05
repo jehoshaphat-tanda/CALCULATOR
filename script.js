@@ -1,365 +1,150 @@
-// ===== Calculator state =====
-
-// Get the calculator display element.
-const display = document.getElementById("display");
-
-// Store the complete mathematical expression as the user types it.
 let expression = "";
 
+const display = document.getElementById("display");
+const equalsButton = document.querySelector('[data-action="equals"]');
+const clearButton = document.querySelector('[data-action="clear"]');
 
-// ===== Display =====
-
-// Show the current expression or answer on the calculator display.
+// Update the calculator display.
 function updateDisplay(value) {
-  display.textContent = value === "" ? "0" : value;
+    display.textContent = value;
 }
 
-
-// ===== Number input =====
-
-// Add a number to the end of the expression.
+// Add a number to the expression.
 function inputNumber(number) {
-  expression += number;
-  updateDisplay(expression);
+    expression += number;
+    updateDisplay(expression);
 }
-
-
-// ===== Operator input =====
 
 // Add an operator to the expression.
-// Consecutive operators are replaced so the expression stays valid.
-function inputOperator(nextOperator) {
-  // Convert the multiplication symbol used by the UI to JavaScript-style "*".
-  const operator = nextOperator;
-
-  // If the expression is empty, do not allow an operator as the first character.
-  if (expression === "") {
-    return;
-  }
-
-  // Replace the previous operator if the user presses operators consecutively.
-  if (/[+\-*/]$/.test(expression)) {
-    expression = expression.slice(0, -1) + operator;
-  } else {
-    expression += operator;
-  }
-
-  // Show the complete expression before calculating.
-  updateDisplay(expression);
-}
-
-
-// ===== Expression calculation =====
-
-// Calculate a complete mathematical expression.
-// This supports multiple operations and normal mathematical precedence.
-function calculateExpression(input) {
-  // Remove spaces from the expression.
-  const cleanExpression = input.replace(/\s+/g, "");
-
-  // Only allow numbers, decimal points and mathematical operators.
-  if (!/^[0-9.+\-*/()]+$/.test(cleanExpression)) {
-    return "Error";
-  }
-
-  try {
-    // Tokenize the expression into numbers, operators and parentheses.
-    const tokens = tokenize(cleanExpression);
-
-    // Convert the expression to Reverse Polish Notation.
-    const postfix = toPostfix(tokens);
-
-    // Calculate the postfix expression.
-    const result = evaluatePostfix(postfix);
-
-    // Make sure the result is a real number.
-    if (!Number.isFinite(result)) {
-      return "Error";
+function inputOperator(operator) {
+    if (expression === "") {
+        return;
     }
 
-    // Remove unnecessary decimal zeros.
-    return Number.isInteger(result) ? String(result) : String(Number(result.toFixed(10)));
-  } catch (error) {
-    // Return Error for invalid mathematical expressions.
-    return "Error";
-  }
-}
-
-
-// ===== Tokenizer =====
-
-// Split an expression into numbers, operators and parentheses.
-function tokenize(input) {
-  const tokens = [];
-  let number = "";
-
-  for (let i = 0; i < input.length; i++) {
-    const char = input[i];
-
-    // Build a number, including decimal values.
-    if (/[0-9.]/.test(char)) {
-      number += char;
-      continue;
-    }
-
-    // Add the completed number before adding an operator.
-    if (number !== "") {
-      if ((number.match(/\./g) || []).length > 1) {
-        throw new Error("Invalid number");
-      }
-
-      tokens.push(Number(number));
-      number = "";
-    }
-
-    // Add supported operators and parentheses.
-    if (/[+\-*/()]/.test(char)) {
-      tokens.push(char);
+    // Replace the previous operator if two operators are entered together.
+    if (/[+\-*/]$/.test(expression)) {
+        expression = expression.slice(0, -1) + operator;
     } else {
-      throw new Error("Invalid character");
-    }
-  }
-
-  // Add the final number.
-  if (number !== "") {
-    if ((number.match(/\./g) || []).length > 1) {
-      throw new Error("Invalid number");
+        expression += operator;
     }
 
-    tokens.push(Number(number));
-  }
-
-  return tokens;
+    updateDisplay(expression.replace(/\*/g, "×").replace(/-/g, "−"));
 }
 
+// Convert the expression into separate numbers and operators for PHP.
+function prepareCalculation(input) {
+    const tokens = input.match(/\d*\.?\d+|[+\-*/]/g);
 
-// ===== Operator precedence =====
+    if (!tokens || tokens.join("") !== input) {
+        throw new Error("Invalid expression");
+    }
 
-// Define the mathematical priority of each operator.
-function precedence(operator) {
-  if (operator === "+" || operator === "-") {
-    return 1;
-  }
+    const numbers = [];
+    const operators = [];
+    let expectingNumber = true;
 
-  if (operator === "*" || operator === "/") {
-    return 2;
-  }
+    for (const token of tokens) {
+        if (expectingNumber) {
+            if (!/^\d*\.?\d+$/.test(token)) {
+                throw new Error("Invalid expression");
+            }
+            numbers.push(Number(token));
+            expectingNumber = false;
+        } else {
+            if (!/^[+\-*/]$/.test(token)) {
+                throw new Error("Invalid expression");
+            }
+            operators.push(token);
+            expectingNumber = true;
+        }
+    }
 
-  return 0;
+    if (expectingNumber) {
+        throw new Error("Expression cannot end with an operator");
+    }
+
+    return { numbers, operators };
 }
 
-
-// ===== Infix to postfix conversion =====
-
-// Convert the normal expression into a form that can be calculated safely.
-function toPostfix(tokens) {
-  const output = [];
-  const operators = [];
-
-  tokens.forEach((token) => {
-    // Numbers go directly to the output.
-    if (typeof token === "number") {
-      output.push(token);
-      return;
+// Send the numbers and operators to PHP and receive the result.
+async function performEquals() {
+    if (expression === "") {
+        return;
     }
 
-    // Opening parentheses are placed on the operator stack.
-    if (token === "(") {
-      operators.push(token);
-      return;
-    }
+    try {
+        const calculation = prepareCalculation(expression);
+        updateDisplay("Calculating...");
 
-    // Closing parentheses cause operators to be removed until "(".
-    if (token === ")") {
-      while (operators.length && operators[operators.length - 1] !== "(") {
-        output.push(operators.pop());
-      }
+        const response = await fetch("calculate.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(calculation)
+        });
 
-      if (operators.pop() !== "(") {
-        throw new Error("Mismatched parentheses");
-      }
-
-      return;
-    }
-
-    // Move higher/equal precedence operators to the output.
-    while (
-      operators.length &&
-      operators[operators.length - 1] !== "(" &&
-      precedence(operators[operators.length - 1]) >= precedence(token)
-    ) {
-      output.push(operators.pop());
-    }
-
-    // Put the current operator on the stack.
-    operators.push(token);
-  });
-
-  // Move remaining operators to the output.
-  while (operators.length) {
-    const operator = operators.pop();
-
-    if (operator === "(" || operator === ")") {
-      throw new Error("Mismatched parentheses");
-    }
-
-    output.push(operator);
-  }
-
-  return output;
-}
-
-
-// ===== Postfix evaluation =====
-
-// Calculate the postfix expression.
-function evaluatePostfix(tokens) {
-  const values = [];
-
-  tokens.forEach((token) => {
-    // Store numbers on the value stack.
-    if (typeof token === "number") {
-      values.push(token);
-      return;
-    }
-
-    // Two values are required for a binary operation.
-    if (values.length < 2) {
-      throw new Error("Invalid expression");
-    }
-
-    const b = values.pop();
-    const a = values.pop();
-
-    // Perform the selected operation.
-    switch (token) {
-      case "+":
-        values.push(a + b);
-        break;
-
-      case "-":
-        values.push(a - b);
-        break;
-
-      case "*":
-        values.push(a * b);
-        break;
-
-      case "/":
-        // Prevent division by zero.
-        if (b === 0) {
-          throw new Error("Division by zero");
+        if (!response.ok) {
+            throw new Error("Server error: " + response.status);
         }
 
-        values.push(a / b);
-        break;
+        const data = await response.json();
 
-      default:
-        throw new Error("Unknown operator");
+        if (!data.success) {
+            throw new Error(data.error || "Calculation failed");
+        }
+
+        expression = String(data.result);
+        updateDisplay(data.result);
+    } catch (error) {
+        console.error(error);
+        expression = "";
+        updateDisplay("Error");
     }
-  });
-
-  // A valid expression must leave exactly one result.
-  if (values.length !== 1) {
-    throw new Error("Invalid expression");
-  }
-
-  return values[0];
 }
 
-
-// ===== Equals button =====
-
-// Calculate the complete expression when "=" is pressed.
-function performEquals() {
-  // Do nothing if there is no expression.
-  if (expression === "") {
-    return;
-  }
-
-  // Calculate everything that has been typed.
-  const result = calculateExpression(expression);
-
-  // Show the answer.
-  updateDisplay(result);
-
-  // Allow the answer to be used in another calculation.
-  expression = result === "Error" ? "" : result;
-}
-
-
-// ===== Clear button =====
-
-// Reset the calculator.
+// Clear the calculator.
 function resetCalculator() {
-  expression = "";
-  updateDisplay("0");
+    expression = "";
+    updateDisplay("0");
 }
 
-
-// ===== Mouse button events =====
-
-// Add click events to all number buttons.
-document.querySelectorAll(".number").forEach((button) => {
-  button.addEventListener("click", () => {
-    inputNumber(button.dataset.value);
-  });
+// Number buttons.
+document.querySelectorAll(".number").forEach(button => {
+    button.addEventListener("click", () => {
+        inputNumber(button.dataset.value || button.textContent.trim());
+    });
 });
 
-// Add click events to all operator buttons.
-document.querySelectorAll(".operator").forEach((button) => {
-  button.addEventListener("click", () => {
-    inputOperator(button.dataset.operator);
-  });
+// Operator buttons.
+document.querySelectorAll(".operator").forEach(button => {
+    button.addEventListener("click", () => {
+        inputOperator(button.dataset.operator);
+    });
 });
 
-// Calculate the full expression when "=" is clicked.
-document
-  .querySelector('[data-action="equals"]')
-  .addEventListener("click", performEquals);
+// Equals and clear buttons use data-action in the HTML.
+if (equalsButton) {
+    equalsButton.addEventListener("click", performEquals);
+}
 
-// Clear the expression when CLEAR is clicked.
-document
-  .querySelector('[data-action="clear"]')
-  .addEventListener("click", resetCalculator);
+if (clearButton) {
+    clearButton.addEventListener("click", resetCalculator);
+}
 
-
-// ===== Keyboard support =====
-
-// Allow the calculator to be controlled from the keyboard.
-document.addEventListener("keydown", (event) => {
-  // Number keys.
-  if (/^[0-9]$/.test(event.key)) {
-    inputNumber(event.key);
-  }
-
-  // Mathematical operators.
-  if (["+", "-", "*", "/"].includes(event.key)) {
-    inputOperator(event.key);
-  }
-
-  // Allow parentheses from the keyboard.
-  if (event.key === "(" || event.key === ")") {
-    // Only allow parentheses as part of an existing expression.
-    if (expression !== "") {
-      expression += event.key;
-      updateDisplay(expression);
+// Keyboard support.
+document.addEventListener("keydown", event => {
+    if (/^[0-9.]$/.test(event.key)) {
+        inputNumber(event.key);
+    } else if (["+", "-", "*", "/"].includes(event.key)) {
+        inputOperator(event.key);
+    } else if (event.key === "Enter" || event.key === "=") {
+        event.preventDefault();
+        performEquals();
+    } else if (event.key === "Backspace") {
+        expression = expression.slice(0, -1);
+        updateDisplay(expression ? expression.replace(/\*/g, "×").replace(/-/g, "−") : "0");
+    } else if (event.key === "Escape") {
+        resetCalculator();
     }
-  }
-
-  // Enter or "=" calculates the complete expression.
-  if (event.key === "Enter" || event.key === "=") {
-    performEquals();
-  }
-
-  // Escape or C clears the calculator.
-  if (event.key === "Escape" || event.key.toLowerCase() === "c") {
-    resetCalculator();
-  }
-
-  // Backspace removes the last character.
-  if (event.key === "Backspace") {
-    expression = expression.slice(0, -1);
-    updateDisplay(expression);
-  }
 });
